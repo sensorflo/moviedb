@@ -175,34 +175,37 @@ References (→ is a foreign key; Datasette shows it as a link with the target's
 referencing it):
 
 ```
-movies ←── cuts ←── media ←── tracks
-   ↑         ↑
-   └──────── viewings     (cut optional: unknown which)
+movies ←── cuts ←── editions ←── media ←── tracks
+             ↑
+             └── viewings
 movies ←── credits ──→ people
 ```
 
-Single-column keys only (Datasette links only those), so `cuts` gets a generated `cut_id`. Ids generated anew
-with each build; saved queries join, never use an id.
+Every movie has a cut, every media an edition: where `movies.yml` names none, the implicit one (the theatrical
+cut; no particular edition). So a viewing always references a cut, a media always an edition, and a media is
+thereby of exactly one movie, cut and edition.
+
+Single-column keys only (Datasette links only those), so `cuts` and `editions` get generated ids. Ids generated
+anew with each build; saved queries join, never use an id.
 
 - **`movies`**, one row per movie in `movies.yml`:
   - `tmdb_id` (key), `title` (English), `original_title`, `year`, `release_date`, `runtime` (min),
     `countries`, `original_language`, `genres`, `directors` (arrays), `summary` (TMDB's overview), `poster`
-  - personal: `tags` (array: the user's and `movie-series/…`; queried by prefix), `rating`, `note` (the
-    movie's own, i.e. some cut, unknown which)
-  - derived: `seen_count`, `last_seen` (latest possible date over all its viewings, also its cuts'),
-    `media_count`, `best_resolution`
-- **`cuts`**, one row per cut: `cut_id` (key), `tmdb_id` → movies, `cut`, `seen_count`, `last_seen`,
-  `rating`, `note`. A movie with media has its theatrical cut also when only implied.
-- **`media`**, one row per store folder, also unmatched (`cut_id` empty) and gone ones:
-  - `folder` (key), `cut_id` → cuts, `edition` (empty: none in particular; editions hold nothing else, so no
-    table of their own), `place` (`local`, `annex`, `gone`), `view_name`
+  - personal: `tags` (array: the user's and `movie-series/…`; queried by prefix)
+  - derived: `seen_count`, `last_seen` (latest possible date over its cuts' viewings), `media_count`,
+    `best_resolution`
+- **`cuts`**, one row per cut, always at least the theatrical one: `cut_id` (key), `tmdb_id` → movies, `cut`,
+  `rating`, `note`, `seen_count`, `last_seen`.
+- **`editions`**, one row per edition with media: `edition_id` (key), `cut_id` → cuts, `edition` (empty: none
+  in particular).
+- **`media`**, one row per store folder, also unmatched (`edition_id` empty) and gone ones:
+  - `folder` (key), `edition_id` → editions, `place` (`local`, `annex`, `gone`), `view_name`
   - from MediaInfo: `tech` (as in the view's name), `resolution`, `hdr`, `video_codec`, `video_mbps`,
     `aspect_ratio`, `duration`, `size_gb`, `audio_languages`, `subtitle_languages` (arrays)
 - **`tracks`**, one row per track: `track_id` (key), `folder` → media, `file`, `type` (video, audio, text),
   `language`, `format`, `channels`, `kbps`, `default`, `forced`, `commentary`, `title`.
-- **`viewings`**, one row per seen date: `viewing_id` (key), `tmdb_id` → movies (always), `cut_id` → cuts
-  (empty: unknown which), `date` (EDTF as typed), `earliest`, `latest` (ISO, widened by `~ ? %`; empty for an
-  open end).
+- **`viewings`**, one row per seen date: `viewing_id` (key), `cut_id` → cuts, `date` (EDTF as typed),
+  `earliest`, `latest` (ISO, widened by `~ ? %`; empty for an open end).
 - **`people`**: `person_id` (TMDB's, key), `name`.
 - **`credits`**: `credit_id` (TMDB's, key), `tmdb_id` → movies, `person_id` → people, `job` (Director,
   Screenplay, Writer, Original Music Composer, Director of Photography, Editor, or Actor), `character`,
@@ -210,6 +213,10 @@ with each build; saved queries join, never use an id.
 - Full-text search over `title`, `original_title`, `summary`, `note`.
 
 ## Open
+
+- **Seen, rating and note on the movie** in `movies.yml`: with every movie having a cut, they'd be the
+  implicit (theatrical) cut's, no longer "some cut, unknown which" (decided earlier). Proposed; awaiting the
+  user's confirmation.
 
 - Not handled for now: a disc with seamless branching (several cuts in one store folder).
 - **albumflow's terms** (decided, later): it says "release" (`movie-to-annex <movie>` takes "its release
