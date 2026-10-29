@@ -167,10 +167,14 @@ movies:
 - YAML reads an unquoted `2024-03-15` as a date; albumflow accepts it, so dates are never quoted.
 - Later top-level keys: `watchlist:` (ordered TMDB ids with the same comments), `series:`.
 
-## Draft: the catalog's tables (`movies.sqlite`)
+## The catalog's tables (`movies.sqlite`)
 
 Built for Datasette: lists as JSON arrays (Datasette facets them per element), dates as ISO text, one row per
 thing so plain SQL filters. Saved queries and column descriptions in `metadata.yml` in the repo.
+
+Derived columns (`seen_count`, `last_seen`, `media_count`, `best_resolution`, `directors`, the MediaInfo
+summaries on `media`) are kept in the tables, so Datasette's table pages sort, filter and facet by them with
+clicks, no SQL. They can't go stale: the catalog is never edited, always rebuilt.
 
 References (→ is a foreign key; Datasette shows it as a link with the target's label, and on each row the rows
 referencing it):
@@ -214,11 +218,6 @@ anew with each build; saved queries join, never use an id.
 - Full-text search over `title`, `original_title`, `summary`, `note`.
 
 ## Open
-
-- **Derived columns** (`seen_count`, `last_seen`, `media_count`, `best_resolution`, `directors`, the
-  MediaInfo summaries on `media`): kept in the tables, so Datasette's table pages can sort, filter and facet
-  by them with clicks, no SQL. They can't go stale: the catalog is never edited, always rebuilt. Proposed;
-  awaiting the user's confirmation (alternative: SQL views).
 
 - Not handled for now: a disc with seamless branching (several cuts in one store folder).
 - **albumflow's terms** (decided, later): it says "release" (`movie-to-annex <movie>` takes "its release
