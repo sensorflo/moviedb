@@ -113,10 +113,16 @@ albumflow still says "release" (name) for a store folder('s name); see Open.
   - The API key (the user registers for it) lives in albumflow's settings under `%APPDATA%`, never in the
     repo.
 
-## Draft: the `movies.yml` schema
+## The `movies.yml` schema
 
-`movies.yml` is the master of the hierarchy, nested; store folder names follow a convention but carry no
-meaning.
+`movies.yml` is the master of the hierarchy, nested. Media are named by their store folder: the name as
+downloaded (scene convention), stable since never renamed. Its words carry no meaning beyond proposals when
+matching.
+
+The view's names are made from it: `<English title>[ - <original title>] (<year>)[ {<cut>}]
+[[<edition>, ]<tech>]`, the tech part as albumflow's `mediainfo.describe` makes it today, e.g.
+`Donnie Darko (2001) {Director's Cut} [Remastered, 2160p DV HEVC 58Mbps, en TrueHD Atmos 7.1, de AC3 5.1
+640kbps, sub en de +3]`.
 
 ```yaml
 movies:
@@ -162,10 +168,7 @@ movies:
 
 ## Open
 
-- **The nested schema above** (the user's proposal): in discussion. Not handled for now: a disc with
-  seamless branching (several cuts in one store folder).
-- **The view's names** (store folder names are never changed): `<English title>[ - <original title>]
-  (<year>)[ {<cut>}] [[<edition>, ]<tech>]`; the tech part as albumflow's `mediainfo.describe` makes it today.
+- Not handled for now: a disc with seamless branching (several cuts in one store folder).
 - **albumflow's terms** (decided, later): it says "release" (`movie-to-annex <movie>` takes "its release
   name", the view's `{<edition>}`, `mediainfo.json` "by release", its plan.md); to change to the terms above,
   consistently everywhere.
