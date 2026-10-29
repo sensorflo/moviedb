@@ -95,7 +95,8 @@ albumflow still says "release" (name) for a store folder('s name); see Open.
   - Only a date per viewing; no ages.
 - **Rating:** 1–5 whole stars, optional, per movie and per cut. The user won't use it at first.
 - **Note:** free text, per movie and per cut.
-- **Seen, rating and note on the movie** mean "some cut, unknown which" (or its only one); on a cut, that cut.
+- **Every movie has a cut:** where `movies.yml` names none, the implicit theatrical one. So seen, rating and
+  note on the movie are the theatrical cut's; on a cut, that cut's. "Some cut, unknown which" can't be said.
 - **Tags:** per movie only (not per cut), hierarchical with `/`.
   - `movie-series/…`: set automatically from TMDB's collections (only in the catalog). "Movie", not "film",
     for consistency.
@@ -214,9 +215,10 @@ anew with each build; saved queries join, never use an id.
 
 ## Open
 
-- **Seen, rating and note on the movie** in `movies.yml`: with every movie having a cut, they'd be the
-  implicit (theatrical) cut's, no longer "some cut, unknown which" (decided earlier). Proposed; awaiting the
-  user's confirmation.
+- **Derived columns** (`seen_count`, `last_seen`, `media_count`, `best_resolution`, `directors`, the
+  MediaInfo summaries on `media`): kept in the tables, so Datasette's table pages can sort, filter and facet
+  by them with clicks, no SQL. They can't go stale: the catalog is never edited, always rebuilt. Proposed;
+  awaiting the user's confirmation (alternative: SQL views).
 
 - Not handled for now: a disc with seamless branching (several cuts in one store folder).
 - **albumflow's terms** (decided, later): it says "release" (`movie-to-annex <movie>` takes "its release
