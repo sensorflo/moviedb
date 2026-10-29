@@ -166,6 +166,31 @@ movies:
 - YAML reads an unquoted `2024-03-15` as a date; albumflow accepts it, so dates are never quoted.
 - Later top-level keys: `watchlist:` (ordered TMDB ids with the same comments), `series:`.
 
+## Draft: the catalog's tables (`movies.sqlite`)
+
+Built for Datasette: lists as JSON arrays (Datasette facets them per element), dates as ISO text, one row per
+thing so plain SQL filters. Saved queries and column descriptions in `metadata.yml` in the repo.
+
+- **`movies`**, one row per movie in `movies.yml`:
+  - `tmdb_id` (key), `title` (English), `original_title`, `year`, `release_date`, `runtime` (min),
+    `countries`, `original_language`, `genres`, `directors` (arrays), `overview`, `poster`
+  - personal: `tags` (array: the user's and `movie-series/…`), `rating`, `note`
+  - derived: `seen_count`, `last_seen` (latest possible date over all its viewings), `media_count`,
+    `best_resolution`
+- **`cuts`**, one row per cut: `tmdb_id`, `cut`, `seen_count`, `last_seen`, `rating`, `note`; the theatrical
+  cut also when only implied by media on the movie.
+- **`media`**, one row per store folder, also unmatched ones (`tmdb_id` empty) and gone ones:
+  - `folder` (key), `tmdb_id`, `cut`, `edition`, `place` (`local`, `annex`, `gone`), `view_name`
+  - from MediaInfo: `tech` (as in the view's name), `resolution`, `hdr`, `video_codec`, `video_mbps`,
+    `aspect_ratio`, `duration`, `size_gb`, `audio_languages`, `subtitle_languages` (arrays)
+- **`tracks`**, one row per track of the media: `folder`, `file`, `type` (video, audio, text), `language`,
+  `format`, `channels`, `kbps`, `default`, `forced`, `commentary`, `title`.
+- **`viewings`**, one row per seen date: `tmdb_id`, `cut` (empty: unknown), `date` (EDTF as typed),
+  `earliest`, `latest` (ISO, widened by `~ ? %`; empty for an open end).
+- **`credits`**, one row per person and movie: `tmdb_id`, `person`, `person_id`, `job` (Director,
+  Screenplay, Original Music Composer, Director of Photography, …, or Actor), `character`, `order`.
+- Full-text search over `title`, `original_title`, `overview`, `note`.
+
 ## Open
 
 - Not handled for now: a disc with seamless branching (several cuts in one store folder).
