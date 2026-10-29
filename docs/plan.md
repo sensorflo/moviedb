@@ -171,25 +171,43 @@ movies:
 Built for Datasette: lists as JSON arrays (Datasette facets them per element), dates as ISO text, one row per
 thing so plain SQL filters. Saved queries and column descriptions in `metadata.yml` in the repo.
 
+References (→ is a foreign key; Datasette shows it as a link with the target's label, and on each row the rows
+referencing it):
+
+```
+movies ←── cuts ←── media ←── tracks
+   ↑         ↑
+   └──────── viewings     (cut optional: unknown which)
+movies ←── credits ──→ people
+```
+
+Single-column keys only (Datasette links only those), so `cuts` gets a generated `cut_id`. Ids generated anew
+with each build; saved queries join, never use an id.
+
 - **`movies`**, one row per movie in `movies.yml`:
   - `tmdb_id` (key), `title` (English), `original_title`, `year`, `release_date`, `runtime` (min),
-    `countries`, `original_language`, `genres`, `directors` (arrays), `overview`, `poster`
-  - personal: `tags` (array: the user's and `movie-series/…`), `rating`, `note`
-  - derived: `seen_count`, `last_seen` (latest possible date over all its viewings), `media_count`,
-    `best_resolution`
-- **`cuts`**, one row per cut: `tmdb_id`, `cut`, `seen_count`, `last_seen`, `rating`, `note`; the theatrical
-  cut also when only implied by media on the movie.
-- **`media`**, one row per store folder, also unmatched ones (`tmdb_id` empty) and gone ones:
-  - `folder` (key), `tmdb_id`, `cut`, `edition`, `place` (`local`, `annex`, `gone`), `view_name`
+    `countries`, `original_language`, `genres`, `directors` (arrays), `summary` (TMDB's overview), `poster`
+  - personal: `tags` (array: the user's and `movie-series/…`; queried by prefix), `rating`, `note` (the
+    movie's own, i.e. some cut, unknown which)
+  - derived: `seen_count`, `last_seen` (latest possible date over all its viewings, also its cuts'),
+    `media_count`, `best_resolution`
+- **`cuts`**, one row per cut: `cut_id` (key), `tmdb_id` → movies, `cut`, `seen_count`, `last_seen`,
+  `rating`, `note`. A movie with media has its theatrical cut also when only implied.
+- **`media`**, one row per store folder, also unmatched (`cut_id` empty) and gone ones:
+  - `folder` (key), `cut_id` → cuts, `edition` (empty: none in particular; editions hold nothing else, so no
+    table of their own), `place` (`local`, `annex`, `gone`), `view_name`
   - from MediaInfo: `tech` (as in the view's name), `resolution`, `hdr`, `video_codec`, `video_mbps`,
     `aspect_ratio`, `duration`, `size_gb`, `audio_languages`, `subtitle_languages` (arrays)
-- **`tracks`**, one row per track of the media: `folder`, `file`, `type` (video, audio, text), `language`,
-  `format`, `channels`, `kbps`, `default`, `forced`, `commentary`, `title`.
-- **`viewings`**, one row per seen date: `tmdb_id`, `cut` (empty: unknown), `date` (EDTF as typed),
-  `earliest`, `latest` (ISO, widened by `~ ? %`; empty for an open end).
-- **`credits`**, one row per person and movie: `tmdb_id`, `person`, `person_id`, `job` (Director,
-  Screenplay, Original Music Composer, Director of Photography, …, or Actor), `character`, `order`.
-- Full-text search over `title`, `original_title`, `overview`, `note`.
+- **`tracks`**, one row per track: `track_id` (key), `folder` → media, `file`, `type` (video, audio, text),
+  `language`, `format`, `channels`, `kbps`, `default`, `forced`, `commentary`, `title`.
+- **`viewings`**, one row per seen date: `viewing_id` (key), `tmdb_id` → movies (always), `cut_id` → cuts
+  (empty: unknown which), `date` (EDTF as typed), `earliest`, `latest` (ISO, widened by `~ ? %`; empty for an
+  open end).
+- **`people`**: `person_id` (TMDB's, key), `name`.
+- **`credits`**: `credit_id` (TMDB's, key), `tmdb_id` → movies, `person_id` → people, `job` (Director,
+  Screenplay, Writer, Original Music Composer, Director of Photography, Editor, or Actor), `character`,
+  `order`. Crew of these jobs and the top 10 actors only.
+- Full-text search over `title`, `original_title`, `summary`, `note`.
 
 ## Open
 
@@ -199,7 +217,6 @@ thing so plain SQL filters. Saved queries and column descriptions in `metadata.y
   consistently everywhere.
 - **An ordered "to watch" list:** wanted later. It's an ordered list, so not just a tag.
 - **To design:**
-  - the catalog's tables
   - matching new store folders to TMDB movies (search by title and year, choice by number, stored in
     `movies.yml`)
   - the migration from EMDB (its TMDB ids and seen flags)
