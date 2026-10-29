@@ -123,17 +123,12 @@ movies:
   1018:  # Mulholland Drive (2001)
     seen: [../2026-10]
     tags: [mood/dark, director/lynch]
-    cuts:
-      Theatrical:
-        editions:
-          Standard: [Mulholland.Drive.2001.1080p.BluRay.x264-AMIABLE]
+    media: [Mulholland.Drive.2001.1080p.BluRay.x264-AMIABLE]
 
   141:  # Donnie Darko (2001)
     seen: [2004~]
+    media: [Donnie.Darko.2001.1080p.BluRay.x264-ABC]
     cuts:
-      Theatrical:
-        editions:
-          Standard: [Donnie.Darko.2001.1080p.BluRay.x264-ABC]
       Director's Cut:
         seen: [2024-03-15]
         rating: 4
@@ -147,11 +142,13 @@ movies:
     seen: [2000?, 2015/2018]
 ```
 
-- A movie: `seen`, `rating`, `note`, `tags`, `cuts`, all optional. Without any media: seen without a file.
-- A cut: `seen`, `rating`, `note`, `editions`, all optional; keyed by cut name.
+- A movie: `seen`, `rating`, `note`, `tags`, `cuts`, `editions`, `media`, all optional. Without any media:
+  seen without a file.
+- A cut: `seen`, `rating`, `note`, `editions`, `media`, all optional; keyed by cut name.
 - An edition: keyed by edition name (several in one, e.g. `Remastered, IMAX`), its value the list of its
   media, each a store folder name. Editions hold no personal data.
-- No cut known: `Theatrical`; no edition: `Standard`. One way only; no shorthand.
+- `cuts:` and `editions:` are optional: `editions:` or `media:` directly on the movie are the theatrical
+  cut's; `media:` directly on a movie or cut are of no particular edition.
 - A store folder name occurs once in the whole file.
 - Matching a new store folder proposes its cut and edition from the folder name (`movienames` rules); the
   user confirms or corrects, albumflow writes it there.
@@ -165,8 +162,10 @@ movies:
 
 ## Open
 
-- **The nested schema above** (the user's proposal): in discussion. Questions: `Standard` as the name for
-  no edition; a disc with seamless branching (several cuts in one store folder).
+- **The nested schema above** (the user's proposal): in discussion. Not handled for now: a disc with
+  seamless branching (several cuts in one store folder).
+- **The view's names** (store folder names are never changed): `<English title>[ - <original title>]
+  (<year>)[ {<cut>}] [[<edition>, ]<tech>]`; the tech part as albumflow's `mediainfo.describe` makes it today.
 - **albumflow's terms** (decided, later): it says "release" (`movie-to-annex <movie>` takes "its release
   name", the view's `{<edition>}`, `mediainfo.json` "by release", its plan.md); to change to the terms above,
   consistently everywhere.
