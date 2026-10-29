@@ -65,10 +65,14 @@ albumflow still says "release" (name) for a store folder('s name); see Open.
   1. A catalog generated from the store, MediaInfo and TMDB; EMDB still in use.
   2. The personal data moved from EMDB into `movies.yml`.
   3. EMDB retired; albumflow no longer writes its Locations.
-- **Place:** `Documents\MovieDB` (for now; the user isn't entirely happy with it), a git repo with a private
-  GitHub remote (the user creates it), so backup-vcs pushes it. restic covers the working tree.
+- **A tool of its own, `moviedb`** (code in `C:\Users\senso\src\moviedb`), not part of albumflow. Its job:
+  the user's personal movie database: the database itself, keeping it in sync with TMDB, connecting it to
+  the media files, the canonical names, and the frontend (Datasette).
+  - The annex stays albumflow's; moviedb has no notion of it (for now).
+- **The data's place:** `Documents\MovieDB` (for now; the user isn't entirely happy with it), a git repo with
+  a private GitHub remote (the user creates it), so backup-vcs pushes it. restic covers the working tree.
 - **`movies.yml`:** the only source of personal data, one file, edited by hand.
-  - albumflow only adds entries, keeping everything else exactly (ruamel.yaml), atomically.
+  - moviedb only adds entries, keeping everything else exactly (ruamel.yaml), atomically.
   - Under `movies:`, keyed by **TMDB id** (TV series, if ever, under their own key).
   - Comments `# <title> (<year>)` written by albumflow; they stay, though from TMDB (public facts).
   - Holds: which movies (also seen without a file), seen, rating, notes, tags, cuts, which media are whose.
@@ -111,8 +115,8 @@ albumflow still says "release" (name) for a store folder('s name); see Open.
   - Personal, non-commercial use, not shared; no AI or machine-learning use of TMDB data.
   - Nothing cached longer than 6 months: the local copy (`MovieDB\tmdb`, `MovieDB\posters`) is refreshed
     before then, and kept out of restic and git.
-  - The API key (the user registers for it) lives in albumflow's settings under `%APPDATA%`, never in the
-    repo.
+  - The API key (the user registers for it) lives in moviedb's settings under `%APPDATA%\moviedb`, never in
+    a repo.
 
 ## The `movies.yml` schema
 
@@ -230,4 +234,15 @@ anew with each build; saved queries join, never use an id.
   - the migration from EMDB (its TMDB ids and seen flags)
   - refreshing TMDB data within 6 months, spread over time
   - the shelf page
-  - whether MovieDB is part of albumflow or a tool of its own.
+- **The split between moviedb and albumflow** (proposed): albumflow knows *where* the media are, moviedb
+  *what* they are.
+  - albumflow keeps: the store on C: and on the annex, `movie-to-annex` / `movie-from-annex`, the junctions'
+    targets (creating them, re-pointing them after a move or qBittorrent's Set location), and EMDB's
+    Locations until EMDB is retired. A new junction is named like its store folder.
+  - moviedb takes: the junctions' names (renaming them to the canonical name), MediaInfo and its cache
+    (`mediainfo.py`, `movienames.py` move over), reading emdb.dat for the migration.
+  - moviedb reaches the media only through the view's junctions; the store folder name is the junction's
+    target's last part. A target that can't be reached: `available` false, MediaInfo from the cache.
+  - The catalog's `media.place` (`local`, `annex`, `gone`) becomes `available` (yes, no); "gone" is a
+    junction or line in `movies.yml` without its folder on a mounted volume.
+  - Until moviedb names the junctions, albumflow's naming from EMDB stays.
